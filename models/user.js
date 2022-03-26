@@ -1,10 +1,23 @@
 "use strict";
 const { Model } = require("sequelize");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 module.exports = (sequelize, DataTypes) => {
   class user extends Model {
     static associate(models) {}
+
+    generateToken = () => {
+      const payload = {
+        id: this.id,
+        role: this.role,
+        username: this.username,
+      };
+      const secret = "mysecret";
+      const token = jwt.sign(payload, secret, { expiresIn: "1h" });
+      return token;
+    };
   }
+
   user.init(
     {
       username: {

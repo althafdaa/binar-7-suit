@@ -5,6 +5,10 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const passport = require("passport");
 
+// router
+const userRouter = require("./router/userRoutes");
+const roomRouter = require("./router/roomRoutes");
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser("SecretApp"));
@@ -28,6 +32,7 @@ app.use((req, res, next) => {
 });
 
 // router
-app.use("/");
+app.use("/", userRouter);
+app.use("/", roomRouter);
 
 module.exports = app;
