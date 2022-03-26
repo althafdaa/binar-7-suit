@@ -37,6 +37,12 @@ module.exports = {
       choiceTwo: {
         type: Sequelize.ARRAY(Sequelize.ENUM("Rock", "Paper", "Scissor")),
       },
+      win_id: {
+        type: Sequelize.INTEGER,
+      },
+      lose_id: {
+        type: Sequelize.INTEGER,
+      },
       draw: {
         type: Sequelize.BOOLEAN,
       },
