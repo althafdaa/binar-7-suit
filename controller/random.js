@@ -1,5 +1,6 @@
 const User = require("../models").user;
 const Room = require("../models").room;
+const History = require("../models").history;
 
 const isPlayerUser = (user) => {
   const { role } = user;
@@ -52,6 +53,24 @@ const checkChoice = async (one, two) => {
   }
 };
 
+const getHistory = async (one, two) => {
+  const playerOne = await History.findOne({
+    where: {
+      user_id: one,
+    },
+  });
+  const playerTwo = await History.findOne({
+    where: {
+      user_id: two,
+    },
+  });
+
+  return {
+    result_one: playerOne.result,
+    result_two: playerTwo.result,
+  };
+};
+
 const playGame = async (req, res) => {
   const { usernameOne, usernameTwo, choiceOne, choiceTwo } = req.body;
   const { roomName } = req.params;
@@ -76,6 +95,25 @@ const playGame = async (req, res) => {
         .json({ message: "Please input 3 choices for each player" });
     }
 
+    const history = await getHistory(thirdCheck.one_id, thirdCheck.two_id);
+
+    await History.update(
+      { room_name: roomName },
+      {
+        where: {
+          user_id: thirdCheck.one_id,
+        },
+      }
+    );
+    await History.update(
+      { room_name: roomName },
+      {
+        where: {
+          user_id: thirdCheck.two_id,
+        },
+      }
+    );
+
     let playerOneScore = 0;
     let playerTwoScore = 0;
     let draw = null;
@@ -88,22 +126,25 @@ const playGame = async (req, res) => {
         (choiceOne[i] === "Scissor" && choiceTwo[i] === "Paper") ||
         (choiceOne[i] === "Paper" && choiceTwo[i] === "Rock")
       ) {
-        playerOneScore = playerOneScore + 30;
+        playerOneScore = playerOneScore + 1;
         draw = false;
       } else if (
         (choiceOne[i] === "Scissor" && choiceTwo[i] === "Rock") ||
         (choiceOne[i] === "Paper" && choiceTwo[i] === "Scissor") ||
         (choiceOne[i] === "Rock" && choiceTwo[i] === "Paper")
       ) {
-        playerTwoScore = playerTwoScore + 30;
+        playerTwoScore = playerTwoScore + 1;
         draw = false;
       }
     }
 
+    const finalScoreOne = history.result_one + playerOneScore;
+    const finalScoreTwo = history.result_two + playerTwoScore;
+
     await Room.update(
       {
-        win_id: playerOneScore,
-        lose_id: playerTwoScore,
+        win_id: Number(finalScoreOne),
+        lose_id: Number(finalScoreTwo),
         draw,
         playerOne: thirdCheck.one_id,
         playerTwo: thirdCheck.two_id,
@@ -111,6 +152,23 @@ const playGame = async (req, res) => {
         choiceTwo,
       },
       { where: { room_name: roomName } }
+    );
+
+    await History.update(
+      { result: Number(finalScoreOne) },
+      {
+        where: {
+          user_id: thirdCheck.one_id,
+        },
+      }
+    );
+    await History.update(
+      { result: Number(finalScoreTwo) },
+      {
+        where: {
+          user_id: thirdCheck.two_id,
+        },
+      }
     );
 
     const gameFinished = await Room.findOne({ where: { room_name: roomName } });

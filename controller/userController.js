@@ -1,5 +1,6 @@
 const User = require("../models").user;
 const bcrypt = require("bcryptjs");
+const History = require("../models").history;
 
 const format = (item) => {
   const { id, username, role } = item;
@@ -56,6 +57,12 @@ const loginAccount = async (req, res) => {
         username,
       },
     });
+    const checkHistory = await History.findOne({
+      where: {
+        user_id: usernameCheck.id,
+      },
+    });
+
     const isPasswordCorrect = bcrypt.compareSync(
       password,
       usernameCheck.password
@@ -68,6 +75,13 @@ const loginAccount = async (req, res) => {
     } else if (!isPasswordCorrect) {
       return response(res, 400, false, "wrong password");
     } else {
+      if (!checkHistory) {
+        await History.create({
+          user_id: usernameCheck.id,
+          result: 0,
+        });
+      }
+
       const token = format(usernameCheck);
 
       return res.status(200).json({
