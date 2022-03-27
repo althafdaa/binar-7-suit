@@ -8,6 +8,7 @@ const passport = require("passport");
 // router
 const userRouter = require("./router/userRoutes");
 const roomRouter = require("./router/roomRoutes");
+const fighRouter = require("./router/fighRouter");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -27,12 +28,12 @@ app.use(passport.session());
 
 app.use((req, res, next) => {
   console.log("cek session", req.session.id);
-  console.log("cek user", req.user);
   next();
 });
 
 // router
 app.use("/", userRouter);
 app.use("/", roomRouter);
+app.use("/", fighRouter);
 
 module.exports = app;
